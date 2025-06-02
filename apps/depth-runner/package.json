@@ -1,0 +1,23 @@
+{
+  "name": "depth-runner",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.15.0",
+    "pixi.js": "^8.9.2",
+    "three": "^0.177.0",
+    "solid-js": "^1.9.5"
+  },
+  "devDependencies": {
+    "@types/three": "^0.176.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vite-plugin-solid": "^2.11.6"
+  }
+}
