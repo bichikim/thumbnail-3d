@@ -14,8 +14,8 @@ function ThreeJsApp() {
     
     // Load textures
     const textureLoader = new THREE.TextureLoader()
-    const imageTexture = await textureLoader.loadAsync('/image4.jpg')
-    const depthTexture = await textureLoader.loadAsync('/image4-depth.png')
+    const imageTexture = await textureLoader.loadAsync('/image8.jpg')
+    const depthTexture = await textureLoader.loadAsync('/image8-depth.png')
     const originalWidth = imageTexture.image.width
     const originalHeight = imageTexture.image.height
     renderer.setSize(originalWidth, originalHeight)

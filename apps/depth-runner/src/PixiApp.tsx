@@ -8,74 +8,59 @@ function App() {
   const [currentScale, setCurrentScale] = createSignal({ x: 0, y: 0 })
 
   onMount(async () => {
-    try {
-      console.log('Loading images...')
-      // 이미지와 depth map을 Assets로 미리 로드
-      const [imgTexture, depthTexture] = await Promise.all([
-        Assets.load('/image8.jpg'),
-        Assets.load('/image8-depth.png'),
-      ])
-      
-      console.log('Images loaded:', imgTexture, depthTexture)
-      
-      // 원본 이미지 크기 확인
-      const originalWidth = imgTexture.width
-      const originalHeight = imgTexture.height
-      
-      console.log('Image dimensions:', originalWidth, originalHeight)
+    // 이미지와 depth map을 Assets로 미리 로드
+    const [imgTexture, depthTexture] = await Promise.all([
+      Assets.load('/image8.jpg'),
+      Assets.load('/image8-depth.png'),
+    ])
+    
+    // 원본 이미지 크기 확인
+    const originalWidth = imgTexture.width
+    const originalHeight = imgTexture.height
 
-      const app = new Application()
-      await app.init({
-        width: originalWidth,
-        height: originalHeight,
-        antialias: true,
-        backgroundColor: 0x1099bb,
-      })
-      pixiContainer()?.appendChild(app.canvas)
+    const app = new Application()
+    await app.init({
+      width: originalWidth,
+      height: originalHeight,
+      antialias: true,
+      backgroundColor: 0x1099bb,
+    })
+    pixiContainer()?.appendChild(app.canvas)
 
-      const img = new Sprite(imgTexture)
-      img.width = originalWidth
-      img.height = originalHeight
-      app.stage.addChild(img)
-      
-      console.log('Main image sprite added')
+    const img = new Sprite(imgTexture)
+    img.width = originalWidth
+    img.height = originalHeight
+    app.stage.addChild(img)
 
-      // Depth map을 원본 크기로 유지하여 정확도 보장
-      const depthMap = new Sprite(depthTexture)
-      depthMap.width = originalWidth
-      depthMap.height = originalHeight
-      depthMap.x = 0
-      depthMap.y = 0
-      // 경계에서 깨짐 방지를 위해 clamp-to-edge 사용
-      depthMap.texture.source.style.addressMode = 'clamp-to-edge'
-      depthMap.visible = false
-      app.stage.addChild(depthMap)
-      
-      console.log('Depth map sprite added')
+    // Depth map을 원본 크기로 유지하여 정확도 보장
+    const depthMap = new Sprite(depthTexture)
+    depthMap.width = originalWidth
+    depthMap.height = originalHeight
+    depthMap.x = 0
+    depthMap.y = 0
+    // 경계에서 깨짐 방지를 위해 clamp-to-edge 사용
+    depthMap.texture.source.style.addressMode = 'clamp-to-edge'
+    depthMap.visible = false
+    app.stage.addChild(depthMap)
 
-      // 내장 DisplacementFilter 사용하되 더 보수적인 scale
-      const displacementFilter = new DisplacementFilter({
-        sprite: depthMap,
-        scale: { x: 0, y: 0 }
-      })
+    // 내장 DisplacementFilter 사용하되 더 보수적인 scale
+    const displacementFilter = new DisplacementFilter({
+      sprite: depthMap,
+      scale: { x: 0, y: 0 }
+    })
+    
+    app.stage.filters = [displacementFilter]
+    setOriginalSize({ width: originalWidth, height: originalHeight })
+    
+    // 부드러운 애니메이션을 위한 ticker 추가
+    app.ticker.add(() => {
+      const filter = displacementFilter
+      const current = currentScale()
       
-      app.stage.filters = [displacementFilter]
-      setOriginalSize({ width: originalWidth, height: originalHeight })
-      
-      // 부드러운 애니메이션을 위한 ticker 추가
-      app.ticker.add(() => {
-        const filter = displacementFilter
-        const current = currentScale()
-        
-        // 부드럽게 목표값으로 이동 (lerp)
-        filter.scale.x += (current.x - filter.scale.x) * 0.15
-        filter.scale.y += (current.y - filter.scale.y) * 0.15
-      })
-      
-      console.log('Displacement filter applied successfully')
-    } catch (error) {
-      console.error('Error initializing app:', error)
-    }
+      // 부드럽게 목표값으로 이동 (lerp)
+      filter.scale.x += (current.x - filter.scale.x) * 0.15
+      filter.scale.y += (current.y - filter.scale.y) * 0.15
+    })
   })
 
   const handleMouseMove = (e: MouseEvent) => {
