@@ -1,5 +1,5 @@
 import { createSignal, onMount } from 'solid-js'
-import {Application, Assets, DisplacementFilter, Sprite} from 'pixi.js'
+import {Application, Assets, Sprite, DisplacementFilter} from 'pixi.js'
 import './App.css'
 
 function App() {
@@ -31,7 +31,7 @@ function App() {
         antialias: true,
         backgroundColor: 0x1099bb,
       })
-      pixiContainer()?.append(app.canvas)
+      pixiContainer()?.appendChild(app.canvas)
 
       const img = new Sprite(imgTexture)
       img.width = originalWidth
@@ -40,18 +40,23 @@ function App() {
       
       console.log('Main image sprite added')
 
+      // Depth map을 원본 크기로 유지하여 정확도 보장
       const depthMap = new Sprite(depthTexture)
-      depthMap.texture.source.style.addressMode = 'repeat'
-      // depth map은 화면에 보이지 않도록 처리
+      depthMap.width = originalWidth
+      depthMap.height = originalHeight
+      depthMap.x = 0
+      depthMap.y = 0
+      // 경계에서 깨짐 방지를 위해 clamp-to-edge 사용
+      depthMap.texture.source.style.addressMode = 'clamp-to-edge'
       depthMap.visible = false
       app.stage.addChild(depthMap)
       
       console.log('Depth map sprite added')
 
-      // 내장 DisplacementFilter 사용하되 scale 제한으로 갈라짐 방지
+      // 내장 DisplacementFilter 사용하되 더 보수적인 scale
       const displacementFilter = new DisplacementFilter({
         sprite: depthMap,
-        scale: 20,
+        scale: { x: 0, y: 0 }
       })
       
       app.stage.filters = [displacementFilter]
@@ -63,11 +68,11 @@ function App() {
         const current = currentScale()
         
         // 부드럽게 목표값으로 이동 (lerp)
-        filter.scale.x += (current.x - filter.scale.x) * 0.1
-        filter.scale.y += (current.y - filter.scale.y) * 0.1
+        filter.scale.x += (current.x - filter.scale.x) * 0.15
+        filter.scale.y += (current.y - filter.scale.y) * 0.15
       })
       
-      console.log('Smooth displacement filter applied successfully')
+      console.log('Displacement filter applied successfully')
     } catch (error) {
       console.error('Error initializing app:', error)
     }
@@ -79,14 +84,22 @@ function App() {
       return
     }
     
-    // scale 값을 제한해서 갈라짐 방지 + 부드러운 보간
-    const maxScale = 15 // 갈라짐 방지를 위한 최대값 제한
-    const rawScaleX = (size.width / 2 - e.offsetX) / 20
+    // 더 보수적인 scale 제한으로 경계 깨짐 방지
+    const maxScale = 30 // 적당한 범위로 제한
+    const rawScaleX = (size.width / 2 - e.offsetX) / 20 // 덜 민감하게 조정
     const rawScaleY = (size.height / 2 - e.offsetY) / 20
     
-    // 값을 제한하고 부드럽게 만들기
-    const scaleX = Math.max(-maxScale, Math.min(maxScale, rawScaleX))
-    const scaleY = Math.max(-maxScale, Math.min(maxScale, rawScaleY))
+    // 경계 근처에서 scale 감소 (거리 기반 falloff)
+    const centerX = size.width / 2
+    const centerY = size.height / 2
+    const distanceFromCenter = Math.sqrt(
+      Math.pow(e.offsetX - centerX, 2) + Math.pow(e.offsetY - centerY, 2)
+    )
+    const maxDistance = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2))
+    const falloffFactor = Math.max(0.3, 1 - (distanceFromCenter / maxDistance) * 0.7)
+    
+    const scaleX = Math.max(-maxScale, Math.min(maxScale, rawScaleX * falloffFactor))
+    const scaleY = Math.max(-maxScale, Math.min(maxScale, rawScaleY * falloffFactor))
     
     setCurrentScale({ x: scaleX, y: scaleY })
   }
