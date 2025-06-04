@@ -6,7 +6,7 @@ function ThreeJsApp() {
   
   onMount(async () => {
     const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.1, 1000)
+    const camera = new THREE.PerspectiveCamera(68, 1, 0.1, 1000)
     const renderer = new THREE.WebGLRenderer({ antialias: true })
     
     const containerEl = container()
@@ -14,15 +14,17 @@ function ThreeJsApp() {
     
     // Load textures
     const textureLoader = new THREE.TextureLoader()
-    const imageTexture = await textureLoader.loadAsync('/image8.jpg')
-    const depthTexture = await textureLoader.loadAsync('/image8-depth.png')
+    const imageTexture = await textureLoader.loadAsync('/image3.jpg')
+    const depthTexture = await textureLoader.loadAsync('/image3-depth.png')
     const originalWidth = imageTexture.image.width
     const originalHeight = imageTexture.image.height
     renderer.setSize(originalWidth, originalHeight)
     containerEl.appendChild(renderer.domElement)
+    console.log(originalWidth +originalHeight / 2)
+    const sizeMount = originalWidth +originalHeight / 2
     
     // Create geometry with more vertices for better displacement
-    const geometry = new THREE.PlaneGeometry(2.25, 3.95, 128, 96)
+    const geometry = new THREE.PlaneGeometry(sizeMount / 310, sizeMount / 310, 128, 96)
     
     // Custom vertex shader for depth displacement
     const vertexShader = `

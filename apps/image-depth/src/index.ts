@@ -18,6 +18,7 @@ app.post('/depth-map', async (req: Request, res: Response): Promise<void> => {
 
   // TODO: 각 이미지 URL에 대해 depth map 생성 (AI 모델 연동 필요)
   // 현재는 placeholder로 빈 결과 반환
+  // MiDas, ZoeDepth 등...
   const results = images.map(url => ({ url, depthMap: null }));
 
   res.json({ results });
