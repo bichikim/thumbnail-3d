@@ -1,11 +1,11 @@
 {
-  "name": "depth-runner",
+  "name": "@apps/depth-runner",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
